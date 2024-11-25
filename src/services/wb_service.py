@@ -2,23 +2,40 @@ import asyncio
 import aiohttp
 import requests
 from logger.logger import init_logger
-from entitity.product import Product
+from src.entitity.product import Product
+from abc import ABC, abstractmethod
+from src.use_cases.product_use_cases import BaseUseCasesProduct
 
 
-log = init_logger(__name__)
+log = init_logger(__name__, "INFO")
 
 
-class WBParser:
+class BaseWBParser(ABC):
+
+    @abstractmethod
+    def parse_wb(self):
+        pass
+
+
+class WBParser(BaseWBParser):
 
     sign: str= "WB"
 
-    list_products: list[Product] = []
+    list_products: list[dict] = []
     list_json_pages: list[dict] = []
 
     base_wb_url: str = "https://catalog.wb.ru/"
     page: int = 1
 
     num_products_on_page: int = 99
+
+    def __init__(self, product_use_cases: BaseUseCasesProduct) -> None:
+        self.product_use_cases = product_use_cases
+
+    def clean(self):
+
+        self.list_products.clear()
+        self.list_json_pages.clear()
 
     def build_wb_api_url(self) -> str:
 
@@ -92,10 +109,11 @@ class WBParser:
             full_price=product_wb.get("sizes")[0].get("price").get("basic") // 100,
             price_with_discount=product_wb.get("sizes")[0].get("price").get("product") // 100,
             url=f"https://www.wildberries.ru/catalog/{product_wb.get('id')}/detail.aspx",
-            in_stock=product_wb.get("totalQuantity")
+            in_stock=int(product_wb.get("totalQuantity")),
+            provider=self.sign,
         )
 
-        log.debug(f"{self.sign} New product {product_wb.get("name")} added")
+        log.debug(f"{self.sign} New product_repository {product_wb.get("name")} added")
         return new_product
 
     def parse_products(self) -> None:
@@ -108,7 +126,10 @@ class WBParser:
 
             for pr in products:
                 new_product = self.create_product_object(pr)
-                self.list_products.append(new_product)
+                self.list_products.append(new_product.to_dict())
+
+    async def insert_products_in_db(self):
+        await self.product_use_cases.add_products(self.list_products)
 
     async def get_product_data(self, sess: aiohttp.ClientSession, url: str):
         async with sess.get(url=url) as response:
@@ -131,12 +152,23 @@ class WBParser:
                 task = asyncio.create_task(self.get_product_data(sess, url))
                 tasks.append(task)
 
-            await asyncio.gather(*tasks)
+            chunked_tasks = [ tasks[offset:20 + offset] for offset in range(0, len(tasks), 20) ]
+            log.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
+
+            for chunk in chunked_tasks:
+
+                await asyncio.gather(*chunk)
 
         await asyncio.to_thread(self.parse_products)
 
         log.info(f"{self.sign} New products to add {len(self.list_products)}")
-        # print(self.list_products)
+
+        await self.insert_products_in_db()
+
+        self.clean()
+
+        log.info(f"{self.sign} Products added into DB")
+
 
 
 
