@@ -1,35 +1,24 @@
 import time
-from abc import abstractmethod, ABC
 import json
-import logging
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from bs4 import BeautifulSoup
-from random import randint, shuffle
-
 import asyncio
 import aiohttp
 
-from entitity.product import Product
+from random import randint, shuffle
+
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from bs4 import BeautifulSoup
+
 from use_cases.cookies_use_cases import CookiesUseCases
+from entitity.product import Product
 from entitity.cookies import CookieObject
+from logger.logger import init_logger
 
 
-logging.basicConfig(
-    format='%(asctime)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S',
-    level=logging.WARNING
-)
+log = init_logger(__name__)
 
 
-class BaseOZParser(ABC):
-
-    @abstractmethod
-    def parse_oz(self):
-        pass
-
-
-class OZParser(BaseOZParser):
+class OZParser:
 
     sign: str = "OZ"
 
@@ -53,7 +42,6 @@ class OZParser(BaseOZParser):
     number_cookies_in_file: int = 2
 
     base_url: str = "https://www.ozon.ru/"
-
     coffee_url: str = "https://www.ozon.ru/category/kofe/"
 
     button: str = "reload-button"
@@ -118,36 +106,36 @@ class OZParser(BaseOZParser):
 
             start = time.time()
 
-            logging.debug(f"{self.sign} Making request to get captcha and cookies to write in the file")
+            log.debug(f"{self.sign} Making request to get captcha and cookies to write in the file")
             new_cookies = self.make_request_to_get_cookies()
 
             if new_cookies is None:
-                logging.debug(f"Failed to get new cookies")
+                log.debug(f"Failed to get new cookies")
 
                 counter_request_cookies += 1
-                logging.info(f"Number of bad requests: {counter_request_cookies}")
+                log.info(f"Number of bad requests: {counter_request_cookies}")
                 continue
 
             if not new_cookies:
-                logging.debug(f"New cookies are empty: {new_cookies}")
+                log.debug(f"New cookies are empty: {new_cookies}")
 
                 counter_request_cookies += 1
-                logging.info(f"Number of bad requests: {counter_request_cookies}")
+                log.info(f"Number of bad requests: {counter_request_cookies}")
                 continue
 
             try:
                 new_cookie_obj: CookieObject = CookieObject(provider_sign=self.sign, cookies=new_cookies)
             except Exception as ex:
-                logging.warning(f"Error: {ex}")
+                log.warning(f"Error: {ex}")
             else:
                 new_cookie_id = self.use_cases.create_new_cookies(cookies_object=new_cookie_obj)
                 number_cookies_in_file += 1
-                logging.info(f"В файл добавлены новые куки с id {new_cookie_id}. "
+                log.info(f"В файл добавлены новые куки с id {new_cookie_id}. "
                              f"Теперь куков в файле: {number_cookies_in_file} "
                              f"Время: {round(time.time() - start, 2)} сек.")
 
         end = time.time() - start_all
-        logging.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
+        log.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
                      f"Number of bad requests: {counter_request_cookies}")
 
     @staticmethod
@@ -171,20 +159,23 @@ class OZParser(BaseOZParser):
 
                 return driver.page_source
 
-    def parse_oz(self):
+    def load_cookies(self):
 
         number_cookies: int = self.use_cases.count_cookies_by_provider_sign(self.sign)
-        print("number_cookies", number_cookies)
 
         if number_cookies < self.number_cookies_in_file:
             self.load_new_cookies_in_file(number_cookies_in_file=number_cookies)
 
+    def get_api_url_products(self) -> None:
+
         # Когда убедились, что в файле есть необходимое количество валидных кук, то
         # начинаем их использовать для парсинга ссылок
         cookies: list[dict] = self.use_cases.get_all_cookies(provider_sign=self.sign)
+        log.info(f"{self.sign} Куки в файле для парсинга")
         shuffle(cookies)
 
         urls = self.build_urls_pages()
+        log.info(f"{self.sign} Number pages to parse {len(urls)}")
 
         for url in urls:
             page_source = self.make_request_to_get_urls_products(cookies=cookies, url=url)
@@ -194,10 +185,11 @@ class OZParser(BaseOZParser):
             urls_products = soup.find_all("a", class_=self.url_product)
 
             for url_pr in urls_products:
-
                 api_url_product = self.api_url + url_pr["href"]
 
                 self.urls_products.append(api_url_product)
+
+        log.info(f"{self.sign} Number urls of products to parse {len(self.urls_products)}")
 
     def get_original_price(self, widget_states: dict):
 
@@ -248,34 +240,35 @@ class OZParser(BaseOZParser):
 
         widget_states = data.get("widgetStates")
         if not widget_states:
+            log.warning(f"{self.sign} "
+                        f"Failed to get widget_states. Impossible to parse other product name, price, url")
             return
 
         name = self.get_product_name(widget_states)
         if name is None:
-            logging.warning(f"Failed to get name product")
+            log.debug(f"Failed to get name product")
             return
 
         price_with_discount = self.get_discount_price(widget_states)
         if price_with_discount is None:
-            logging.warning(f"Failed to get discount price")
+            log.debug(f"Failed to get discount price")
             return
 
         full_price = self.get_original_price(widget_states)
         if full_price is None:
-            logging.warning(f"Failed to get full price")
+            log.debug(f"Failed to get full price")
             return
 
         in_stock = self.count_in_stock(widget_states)
         if in_stock is None:
-            logging.warning(f"Failed to get in_stock")
-            return
+            log.debug(f"Failed to get in_stock")
 
         self.list_products.append(
             Product(
                 name=name,
                 full_price=full_price,
                 price_with_discount=price_with_discount,
-                in_stock=int(in_stock),
+                in_stock=in_stock,
                 url=""
             )
         )
@@ -288,10 +281,17 @@ class OZParser(BaseOZParser):
 
             data: dict = await response.json()
 
-            self.list_json_data.append(data)
+            self.parse_product(data)
 
-    async def async_func(self):
+    async def parse_oz(self):
 
+        # Загружаем куки для доступа к странице
+        self.load_cookies()
+
+        # Получаем ссылки на товары, формируем их них ссылки для API Ozon
+        await asyncio.to_thread(self.get_api_url_products)
+
+        # Асинхронно проходимся по каждой ссылке
         async with aiohttp.ClientSession() as sess:
             tasks: list = []
             for url in self.urls_products:
@@ -300,13 +300,5 @@ class OZParser(BaseOZParser):
 
             await asyncio.gather(*tasks)
 
-        for data in self.list_json_data:
-            await asyncio.to_thread(self.parse_product, data)
+        log.info(f"{self.sign} Number of parsed products: {len(self.list_products)}")
 
-
-obj = OZParser()
-obj.parse_oz()
-print(obj.urls_products)
-asyncio.run(obj.async_func())
-for i in obj.list_products:
-    print(i)
