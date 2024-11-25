@@ -8,6 +8,7 @@ class Product:
     full_price: int
     price_with_discount: int
     url: str
+    sign: str
     in_stock: int
 
     def to_dict(self):

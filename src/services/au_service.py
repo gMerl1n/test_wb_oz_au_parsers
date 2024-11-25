@@ -86,7 +86,7 @@ class AUParser(BaseAUParser):
             price_with_discount=product_data.get("oldPrice").get("oldPrice"),
             url=f'https://www.auchan.ru/product/{product_data.get("code")}/',
             in_stock=product_data.get("stock").get("qty"),
-            provider=self.sign
+            sign=self.sign
             )
 
         self.list_parsed_products.append(product)

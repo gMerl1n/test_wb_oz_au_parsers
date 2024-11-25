@@ -114,7 +114,7 @@ class WBParser(BaseWBParser):
             price_with_discount=product_wb.get("sizes")[0].get("price").get("product") // 100,
             url=f"https://www.wildberries.ru/catalog/{product_wb.get('id')}/detail.aspx",
             in_stock=int(product_wb.get("totalQuantity")),
-            provider=self.sign,
+            sign=self.sign,
         )
 
         logging.debug(f"{self.sign} New product_repository {product_wb.get("name")} added")

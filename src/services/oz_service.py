@@ -288,7 +288,7 @@ class OZParser:
                 price_with_discount=price_with_discount.split()[0],
                 in_stock=in_stock,
                 url="",
-                provider=self.sign
+                sign=self.sign
             )
         )
 
