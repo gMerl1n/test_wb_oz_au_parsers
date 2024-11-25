@@ -1,14 +1,9 @@
-import json
 import logging
-import time
 from abc import abstractmethod, ABC
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-import fake_useragent
 import requests
 import aiohttp
 import asyncio
-from entitity.product import Product
+from src.entitity.product import Product
 
 
 logging.basicConfig(
@@ -26,6 +21,8 @@ class BaseAUParser(ABC):
 
 
 class AUParser(BaseAUParser):
+
+    sign: str = "AU"
 
     api_url_shops: str = 'https://www.auchan.ru/v1/shops'
     api_url_products: str = 'https://www.auchan.ru/v1/catalog/products'
@@ -85,7 +82,8 @@ class AUParser(BaseAUParser):
             full_price=product_data.get("price").get("value"),
             price_with_discount=product_data.get("oldPrice").get("oldPrice"),
             url=f'https://www.auchan.ru/product/{product_data.get("code")}/',
-            in_stock=product_data.get("stock").get("qty")
+            in_stock=product_data.get("stock").get("qty"),
+            provider=self.sign
             )
 
         self.list_parsed_products.append(product)
@@ -120,8 +118,3 @@ class AUParser(BaseAUParser):
             await asyncio.to_thread(self.parse_product, data)
 
 
-obj = AUParser()
-obj.parse_au()
-print(obj.list_api_urls_merchants)
-# asyncio.run(obj.async_func())
-# print(obj.list_parsed_products)
