@@ -1,10 +1,9 @@
-from src.repository.product_repository import RepositoryProduct, BaseRepositoryProduct
-from src.repository.cookies_repository import RepositoryCookies, BaseRepositoryCookies
+from src.repository.product_repository.product_repository import RepositoryProduct, BaseRepositoryProduct
+from src.repository.cookies_repository.cookies_repository import RepositoryCookies, BaseRepositoryCookies
 from src.use_cases.cookies_use_cases import CookiesUseCases, BaseUseCasesCookies
 from src.use_cases.product_use_cases import UseCasesProduct, BaseUseCasesProduct
 from src.services.wb_service import BaseWBParser, WBParser
 from src.services.oz_service import BaseOZParser, OZParser
-from src.services.au_service import BaseAUParser, AUParser
 import punq
 
 
@@ -23,6 +22,9 @@ class DIContainer:
     def get_parser_oz(self):
         self.container.register(BaseOZParser, OZParser)
         return self.container.resolve(BaseOZParser)
+
+    def get_use_cases_product(self):
+        return self.container.resolve(BaseUseCasesProduct)
 
 
 di_container = DIContainer()
