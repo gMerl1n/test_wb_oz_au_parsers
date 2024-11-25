@@ -1,11 +1,14 @@
 import time
 import json
 import asyncio
+from xml.dom.xmlbuilder import Options
+
 import aiohttp
 
 from random import randint, shuffle
 
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
@@ -140,7 +143,10 @@ class OZParser:
 
     def make_request_to_get_urls_products(self, cookies: list[dict], url):
 
-        with webdriver.Firefox() as driver:
+        opts = Options()
+        opts.add_argument("--headless")
+
+        with webdriver.Firefox(options=opts) as driver:
 
             cookie = [c["cookies"] for c in cookies]
 
@@ -172,7 +178,7 @@ class OZParser:
         # Когда убедились, что в файле есть необходимое количество валидных кук, то
         # начинаем их использовать для парсинга ссылок
         cookies: list[dict] = self.use_cases.get_all_cookies(provider_sign=self.sign)
-        log.info(f"{self.sign} Куки в файле для парсинга")
+        log.info(f"{self.sign} Куки в файле для парсинга: {len(cookies)}")
         shuffle(cookies)
 
         urls = self.build_urls_pages()
