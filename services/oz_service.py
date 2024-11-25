@@ -138,8 +138,7 @@ class OZParser:
         log.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
                      f"Number of bad requests: {counter_request_cookies}")
 
-    @staticmethod
-    def make_request_to_get_urls_products(cookies: list[dict], url):
+    def make_request_to_get_urls_products(self, cookies: list[dict], url):
 
         with webdriver.Firefox() as driver:
 
@@ -148,14 +147,16 @@ class OZParser:
             for c1 in cookie:
 
                 driver.get(url)
-                time.sleep(4)
+                driver.implicitly_wait(self.implicity_wait_limit)
+                time.sleep(randint(self.min_sleep_selenium_limit, self.max_sleep_selenium_limit) / 1000)  # in seconds
                 driver.delete_all_cookies()
 
                 for c2 in c1:
                     driver.add_cookie(c2)
 
-                time.sleep(4)
                 driver.get(url)
+                driver.implicitly_wait(self.implicity_wait_limit)
+                time.sleep(randint(self.min_sleep_selenium_limit, self.max_sleep_selenium_limit) / 1000)  # in seconds
 
                 return driver.page_source
 
