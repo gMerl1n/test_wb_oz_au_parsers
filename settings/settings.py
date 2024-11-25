@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -23,3 +24,7 @@ DATABASE_URL_POSTGRES = f"postgresql+asyncpg://{POSTGRES_USER}:{POSTGRES_PASSWOR
 
 engine = create_async_engine(DATABASE_URL_POSTGRES, echo=False, future=True)
 async_session = sessionmaker(autoflush=False, bind=engine, class_=AsyncSession)
+
+
+with open("config.json") as file:
+    config_parsers = json.load(file)

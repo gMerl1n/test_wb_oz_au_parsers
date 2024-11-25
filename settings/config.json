@@ -1,0 +1,13 @@
+{"WB":  {
+  "limit_page":  3,
+  "limit requests":  20
+},
+  "OZ": {
+  "limit_page":  3,
+  "limit requests":  20
+},
+  "AU": {
+  "limit_page":  3,
+  "limit requests":  20
+}
+}
