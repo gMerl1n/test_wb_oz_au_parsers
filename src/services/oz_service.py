@@ -12,13 +12,21 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
-from use_cases.cookies_use_cases import CookiesUseCases
-from entitity.product import Product
-from entitity.cookies import CookieObject
+from src.use_cases.cookies_use_cases import CookiesUseCases
+from src.entitity.product import Product
+from src.entitity.cookies import CookieObject
 from logger.logger import init_logger
+from abc import ABC, abstractmethod
 
 
 log = init_logger(__name__)
+
+
+class BaseOZParser(ABC):
+
+    @abstractmethod
+    def parse_oz(self):
+        pass
 
 
 class OZParser:
@@ -80,7 +88,8 @@ class OZParser:
             return
 
         button.click()
-        time.sleep(5)
+        driver.implicitly_wait(self.implicity_wait_limit)
+        time.sleep(randint(self.min_sleep_selenium_limit, self.max_sleep_selenium_limit) / 1000)  # in seconds
         return driver
 
     def make_request_to_get_cookies(self):
@@ -89,7 +98,6 @@ class OZParser:
 
             driver.get(url=self.base_url)
             driver.implicitly_wait(self.implicity_wait_limit)
-
             time.sleep(randint(self.min_sleep_selenium_limit, self.max_sleep_selenium_limit) / 1000)  # in seconds
             driver_with_cookies = self.click_button(driver)
 
@@ -273,10 +281,11 @@ class OZParser:
         self.list_products.append(
             Product(
                 name=name,
-                full_price=full_price,
-                price_with_discount=price_with_discount,
+                full_price=full_price.split()[0],
+                price_with_discount=price_with_discount.split()[0],
                 in_stock=in_stock,
-                url=""
+                url="",
+                provider=self.sign
             )
         )
 
@@ -305,7 +314,11 @@ class OZParser:
                 task = asyncio.create_task(self.get_product_data(sess, url))
                 tasks.append(task)
 
-            await asyncio.gather(*tasks)
+            chunked_tasks = [tasks[offset:20 + offset] for offset in range(0, len(tasks), 20)]
+
+            for chunk in chunked_tasks:
+
+                await asyncio.gather(*chunk)
 
         log.info(f"{self.sign} Number of parsed products: {len(self.list_products)}")
 
