@@ -5,15 +5,9 @@ import aiohttp
 import asyncio
 
 from abc import abstractmethod, ABC
-
+from src.use_cases.product_use_cases import BaseUseCasesProduct
+from config.settings import config_parsers, log
 from src.entitity.product import Product
-
-
-logging.basicConfig(
-    format='%(asctime)s - %(message)s',
-    datefmt='%d-%b-%y %H:%M:%S',
-    level=logging.WARNING
-)
 
 
 class BaseAUParser(ABC):
@@ -27,32 +21,37 @@ class AUParser(BaseAUParser):
 
     sign: str = "AU"
 
+    category: str = "molochnye_kokteyli_napitki"
+
     api_url_shops: str = 'https://www.auchan.ru/v1/shops'
     api_url_products: str = 'https://www.auchan.ru/v1/catalog/products'
 
     list_json_data: list[dict] = []
-    list_parsed_products: list[Product] = []
-    list_api_urls_merchants: list[dict] = []
+    list_parsed_products: list[dict] = []
+
+    def __init__(self, product_use_cases: BaseUseCasesProduct) -> None:
+        self.config = config_parsers
+        self.product_use_cases = product_use_cases
 
     def get_shops_ids(self) -> list[int]:
 
         pr = {"https": "http://B6XsHR:UXEQr3@185.73.181.35:8000"}
 
         list_shop_ids: list[int] = []
-        print(list_shop_ids)
         response: requests.Response = requests.get(url=self.api_url_shops, timeout=12, proxies=pr)
+        print(response)
+        print(response.text)
         response_json: dict = response.json()
-        print("response_json")
         for shop in response_json['shops']:
             list_shop_ids.append(shop['merchant_id'])
 
         return list_shop_ids
 
-    def parse_au(self):
+    def get_list_api_products(self):
+
+        list_api_urls_merchants = []
 
         shops_ids: list[int] = self.get_shops_ids()
-
-        print(shops_ids)
 
         for shop_id in shops_ids[:10]:
 
@@ -62,21 +61,16 @@ class AUParser(BaseAUParser):
             }
 
             body = {
-                "filter": {"category": "molochnye_kokteyli_napitki", "promo_only": False, "active_only": False,
+                "filter": {"category": self.category, "promo_only": False, "active_only": False,
                            "cashback_only": False}
             }
 
-            # response = requests.get(url='https://www.auchan.ru/v1/catalog/products', params=params, json=body)
-
-            # print(response.json())
-
-            # with open(f"auchan{shop_id}.json", "w") as file:
-                 # json.dump(response.json(), file, indent=4, ensure_ascii=False)
-
-            self.list_api_urls_merchants.append({
+            list_api_urls_merchants.append({
                 "params": params,
                 "body": body,
             })
+
+            return list_api_urls_merchants
 
     def parse_product(self, product_data: dict) -> Product:
 
@@ -89,8 +83,10 @@ class AUParser(BaseAUParser):
             sign=self.sign
             )
 
-        self.list_parsed_products.append(product)
+        self.list_parsed_products.append(product.to_dict())
 
+    async def insert_products_in_db(self):
+        await self.product_use_cases.add_products(self.list_parsed_products)
 
     async def get_product_data(self, sess, params_requests):
 
@@ -107,17 +103,27 @@ class AUParser(BaseAUParser):
             if list_items:
                 self.list_json_data.extend(list_items)
 
-    async def async_func(self):
+    async def parse_au(self):
+
+        limit_requests: int = self.config[self.sign]["limit_requests"]
+
+        list_api_urls_ = self.get_list_api_products()
 
         async with aiohttp.ClientSession() as sess:
             tasks: list = []
-            for params_requests in self.list_api_urls_merchants:
+            for params_requests in list_api_urls_:
                 task = asyncio.create_task(self.get_product_data(sess, params_requests))
                 tasks.append(task)
 
-            await asyncio.gather(*tasks)
+            chunked_tasks = [tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests)]
+            log.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
+
+            for chunk in chunked_tasks[:2]:
+                await asyncio.gather(*chunk)
 
         for data in self.list_json_data:
             await asyncio.to_thread(self.parse_product, data)
+
+        await self.insert_products_in_db()
 
 
