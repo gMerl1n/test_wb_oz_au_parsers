@@ -4,6 +4,7 @@ from container.di_container import di_container
 from src.use_cases.product_use_cases import BaseUseCasesProduct
 from src.services.parsers_service.wb_service import BaseWBParser
 from src.services.parsers_service.oz_service import BaseOZParser
+from src.services.cookies_service.cookies_loader import oz_loader_cookies
 from config.settings import PARSERS
 
 
@@ -42,6 +43,8 @@ async def run_oz(oz_parser: BaseOZParser = Depends(di_container.get_parser_oz)):
     return True
 
 
-@router_product.post("/run_au")
-async def run_au():
-    pass
+@router_product.post("/load_oz_cookies")
+async def load_oz_cookies():
+
+    result = oz_loader_cookies.load_cookies()
+    return result

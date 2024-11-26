@@ -50,17 +50,15 @@ flowchart TB
 
 ## 3. Как запустить
 
-Из докера:
-
-+ git clone git@github.com:iriskin77/test_wb_oz_au_parsers.git
-+ docker-compose build
-+ docker-compose up
-
-Далее приложение развернется на порту localhost: 8092
-
-Из виртуального окружения:
+Запустить приложение виртуального окружения:
 
 + git clone git@github.com:iriskin77/test_wb_oz_au_parsers.git
 + python3 -m venv venv
 + source/venv/bin/activate
++ pip3 install -r requirements.txt
++ uvicorn src.main:app --reload
+
+Запустить PostgreSQL из Docker-compose:
+
++ docker-compose up
 

@@ -129,7 +129,7 @@ class OZCookiesLoader:
                     self.cookies_use_cases.update_cookie_object_by_id(data_to_update=data_to_update)
 
 
-    def load_cookies(self):
+    def load_cookies(self) -> bool | None:
 
         number_cookies: int = self.cookies_use_cases.count_cookies_by_provider_sign(self.sign)
 
@@ -140,6 +140,8 @@ class OZCookiesLoader:
 
         if number_cookies < self.number_cookies_in_file:
             self.load_new_cookies_in_file(number_cookies_in_file=number_cookies)
+
+        return True
 
 
 oz_loader_cookies = OZCookiesLoader()
