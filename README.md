@@ -50,15 +50,23 @@ flowchart TB
 
 ## 3. Как запустить
 
-Запустить приложение виртуального окружения:
++ Запустить приложение виртуального окружения:
 
-+ git clone git@github.com:iriskin77/test_wb_oz_au_parsers.git
-+ python3 -m venv venv
-+ source/venv/bin/activate
-+ pip3 install -r requirements.txt
-+ uvicorn src.main:app --reload
+  + git clone git@github.com:iriskin77/test_wb_oz_au_parsers.git 
+  + python3 -m venv venv
+  + source/venv/bin/activate
+  + pip3 install -r requirements.txt
+  + uvicorn src.main:app --reload
 
-Запустить PostgreSQL из Docker-compose:
++ Запустить PostgreSQL из Docker-compose:
 
-+ docker-compose up
+  + docker-compose up
 
++ Парсеры запускаются через запросы:
+    + /run_wb - WB парсер
+    + /run_oz - OZ парсер
+    + /load_oz_cookies - загрузить куки для OZ парсера
+
++ Парсер AU (Auchan) не работает. Чтобы он заработал, нужно:
+    + либо обходить qrator защиту и использовать перезапись куки
+    + либо платные прокси / динамические прокси

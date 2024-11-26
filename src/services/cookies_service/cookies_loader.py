@@ -140,8 +140,8 @@ class OZCookiesLoader:
 
         if number_cookies < self.number_cookies_in_file:
             self.load_new_cookies_in_file(number_cookies_in_file=number_cookies)
-
-        return True
+        else:
+            return True
 
 
 oz_loader_cookies = OZCookiesLoader()

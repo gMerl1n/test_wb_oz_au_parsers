@@ -43,7 +43,7 @@ async def run_oz(oz_parser: BaseOZParser = Depends(di_container.get_parser_oz)):
     return True
 
 
-@router_product.post("/load_oz_cookies")
+@router_product.get("/load_oz_cookies")
 async def load_oz_cookies():
 
     result = oz_loader_cookies.load_cookies()
