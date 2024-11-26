@@ -26,5 +26,7 @@ engine = create_async_engine(DATABASE_URL_POSTGRES, echo=False, future=True)
 async_session = sessionmaker(autoflush=False, bind=engine, class_=AsyncSession)
 
 
-with open("config.json") as file:
+config_path = os.path.join(BASE_DIR, 'settings', "config.json")
+
+with open(config_path) as file:
     config_parsers = json.load(file)
