@@ -1,12 +1,14 @@
 import json
 import os
+import logging
+from typing import Literal
 from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 
 
-PARSERS: list[str] = ["WB", "OZ", "AU"]
+PARSERS: tuple = ("WB", "OZ", "AU")
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,7 +28,27 @@ engine = create_async_engine(DATABASE_URL_POSTGRES, echo=False, future=True)
 async_session = sessionmaker(autoflush=False, bind=engine, class_=AsyncSession)
 
 
-config_path = os.path.join(BASE_DIR, 'settings', "config.json")
+config_path = os.path.join(BASE_DIR, 'config', "config.json")
 
 with open(config_path) as file:
     config_parsers = json.load(file)
+
+
+def init_logger(
+    name: str, level: int | Literal['DEBUG', 'INFO', 'WARNING', 'ERROR'] = logging.INFO
+):
+    """
+    Configure and get logger by provided name.
+    """
+    if isinstance(level, str):
+        level = getattr(logging, level)
+
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+    logger.addHandler(handler)
+    return logger
+
+
+log = init_logger("parsers", "INFO")
