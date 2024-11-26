@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
 from src.repository.product_repository.product_repository import BaseRepositoryProduct
-from settings.settings import async_session
+from config.settings import async_session
 
 
 class BaseUseCasesProduct(ABC):

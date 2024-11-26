@@ -22,11 +22,11 @@ class BaseRepositoryProduct(ABC):
         raise NotImplemented
 
     @abstractmethod
-    async def get_products_by_sign(self, async_session: AsyncSession, sign: str):
+    async def get_products_by_sign(self, async_session, sign: str):
         raise NotImplemented
 
     @abstractmethod
-    async def get_all_products(self, async_session: AsyncSession):
+    async def get_all_products(self, async_session):
         raise NotImplemented
 
     @abstractmethod
@@ -39,19 +39,19 @@ class RepositoryProduct(BaseRepositoryProduct):
     async def add_product(self, async_session,  new_product: dict):
 
         async with async_session() as session:
-            new_product["created_at"] = datetime.now()
+            # new_product["created_at"] = datetime.now()
             session.add(Product(**new_product))
             await session.commit()
 
     async def add_products(self, async_session, new_products: list[dict]):
 
-        np = []
+        # np = []
 
-        for p in new_products:
-            p["created_at"] = datetime.now()
-            np.append(p)
+        # for p in new_products:
+        #     p["created_at"] = datetime.now()
+        #     np.append(p)
 
-        res = [Product(**p) for p in np]
+        res = [Product(**p) for p in new_products]
 
         async with async_session() as session:
             session.add_all(res)
@@ -60,15 +60,17 @@ class RepositoryProduct(BaseRepositoryProduct):
     def get_product_by_id(self):
         pass
 
-    async def get_products_by_sign(self, async_session: AsyncSession, sign: str):
-        query = select(Product).where(Product.provider == sign)
-        products_by_sign = await async_session.execute(query)
-        return products_by_sign.scalars().all()
+    async def get_products_by_sign(self, async_session, sign: str):
+        async with async_session() as session:
+            query = select(Product).where(Product.sign == sign)
+            products_by_sign = await session.execute(query)
+            return products_by_sign.scalars().all()
 
-    async def get_all_products(self, async_session: AsyncSession):
-        query = select(Product)
-        products = await async_session.execute(query)
-        return products.scalars().all()
+    async def get_all_products(self, async_session):
+        async with async_session() as session:
+            query = select(Product)
+            products = await session.execute(query)
+            return products.scalars().all()
 
     def update_product_by_id(self):
         pass
