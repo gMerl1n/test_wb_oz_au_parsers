@@ -2,16 +2,19 @@ version: "3.9"
 
 services:
 
-  parser_app:
-    build: .
-    container_name: parser_app
-    command: ['./start.sh']
-    ports:
-      - "8000:8000"
+#  parser_app:
+#    build: .
+#    container_name: parser_app
+#    command: ['./start.sh']
+#    ports:
+#      - "8092:8092"
+#    networks:
+#      - custom
 
   db:
     image: postgres:16.1
     container_name: "parser_db"
+    hostname: 'db'
     volumes:
       - data:/var/lib/postgresql/data/
     restart: always
@@ -19,7 +22,12 @@ services:
       - .env
     ports:
       - "5432:5432"
-
+    networks:
+      - custom
 
 volumes:
   data:
+
+networks:
+  custom:
+    driver: bridge
