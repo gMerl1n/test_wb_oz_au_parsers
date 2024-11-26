@@ -1,9 +1,10 @@
 import time
 import json
-import asyncio
-
-import aiohttp
+from abc import ABC, abstractmethod
 from random import randint, shuffle
+
+import asyncio
+import aiohttp
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
@@ -13,7 +14,6 @@ from bs4 import BeautifulSoup
 from src.use_cases.cookies_use_cases import CookiesUseCases
 from src.use_cases.product_use_cases import BaseUseCasesProduct
 from src.entitity.product import Product
-from abc import ABC, abstractmethod
 from config.settings import config_parsers, log
 
 
@@ -122,8 +122,6 @@ class OZParser:
             soup = self.to_bs4(page_source)
 
             urls_products = soup.find_all("a", class_=self.url_product)
-            # print("urls_products")
-            # print(urls_products)
 
             for url_pr in urls_products:
                 api_url_product = self.api_url + url_pr["href"]
@@ -162,9 +160,6 @@ class OZParser:
             name = json_title.get("title")
             return name if name else None
 
-    def get_product_url(self, widget_states: dict):
-        pass
-
     def count_in_stock(self, widget_states: dict):
 
         big_promo = widget_states.get("bigPromoPDP-3422454-default-1")
@@ -177,17 +172,12 @@ class OZParser:
             if not in_stock:
                 return
             else:
-                print("in_stock")
-                print(in_stock)
                 in_stock_num = [num for num in in_stock if num.isdigit()]
                 return int(''.join(in_stock_num))
 
     @staticmethod
     def get_product_url(data):
         seo: dict = data.get("seo")
-        # print("seo")
-        # print(type(seo))
-        # print(seo.get("link"))
         link: list = seo.get("link")
         href = link[0].get("href")
         return href if href else ""
@@ -252,7 +242,6 @@ class OZParser:
         # Получаем ссылки на товары, формируем их них ссылки для API Ozon
         await asyncio.to_thread(self.get_api_url_products)
 
-        # Асинхронно проходимся по каждой ссылке
         async with aiohttp.ClientSession() as sess:
             tasks: list = []
             for url in self.urls_products:

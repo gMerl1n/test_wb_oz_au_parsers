@@ -1,10 +1,9 @@
-import logging
+from abc import abstractmethod, ABC
 
 import requests
 import aiohttp
 import asyncio
 
-from abc import abstractmethod, ABC
 from src.use_cases.product_use_cases import BaseUseCasesProduct
 from config.settings import config_parsers, log
 from src.entitity.product import Product
@@ -35,12 +34,8 @@ class AUParser(BaseAUParser):
 
     def get_shops_ids(self) -> list[int]:
 
-        pr = {"https": "http://B6XsHR:UXEQr3@185.73.181.35:8000"}
-
         list_shop_ids: list[int] = []
-        response: requests.Response = requests.get(url=self.api_url_shops, timeout=12, proxies=pr)
-        print(response)
-        print(response.text)
+        response: requests.Response = requests.get(url=self.api_url_shops, timeout=12)
         response_json: dict = response.json()
         for shop in response_json['shops']:
             list_shop_ids.append(shop['merchant_id'])

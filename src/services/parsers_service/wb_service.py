@@ -146,7 +146,7 @@ class WBParser(BaseWBParser):
             self.list_json_pages.append(data)
 
     async def parse_wb(self) -> None:
-
+        print("WB")
         limit_requests: int =self.config[self.sign]["limit_requests"]
 
         list_urls = await asyncio.to_thread(self.build_urls)
