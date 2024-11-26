@@ -20,7 +20,7 @@
 
 Как выглядит сервис
 
-```
+```mermaid
 flowchart TB
     CookiesLoaders-->UseCases
     Api-Handlers-->UseCases
