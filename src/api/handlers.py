@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends
 
-from container.di_container import di_container
+from di_container.di_container import di_container
 from src.use_cases.product_use_cases import BaseUseCasesProduct
 from src.services.parsers_service.wb_service import BaseWBParser
 from src.services.parsers_service.oz_service import BaseOZParser

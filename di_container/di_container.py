@@ -15,19 +15,19 @@ class DIContainer:
     container.register(BaseUseCasesCookies, CookiesUseCases)
     container.register(BaseUseCasesProduct, UseCasesProduct)
 
-    def get_parser_wb(self):
+    def get_parser_wb(self) -> BaseWBParser:
         self.container.register(BaseWBParser, WBParser)
         return self.container.resolve(BaseWBParser)
 
-    def get_parser_oz(self):
+    def get_parser_oz(self) -> BaseOZParser:
         self.container.register(BaseOZParser, OZParser)
         return self.container.resolve(BaseOZParser)
 
-    def get_parser_au(self):
+    def get_parser_au(self) -> BaseAUParser:
         self.container.register(BaseAUParser, AUParser)
         return self.container.resolve(BaseAUParser)
 
-    def get_use_cases_product(self):
+    def get_use_cases_product(self) -> BaseUseCasesProduct:
         return self.container.resolve(BaseUseCasesProduct)
 
 

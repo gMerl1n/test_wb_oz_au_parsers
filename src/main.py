@@ -12,13 +12,13 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    w = di_container.get_parser_wb()
+    wb = di_container.get_parser_wb()
     oz = di_container.get_parser_oz()
 
     try:
         # Настройка и запуск планировщика
         scheduler.add_job(
-            w.parse_wb,
+            wb.parse_wb,
             trigger=IntervalTrigger(minutes=3),
 
         )

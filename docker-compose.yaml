@@ -2,16 +2,16 @@ version: "3.9"
 
 services:
 
-#  parser_app:
-#    build: .
-#    container_name: parser_app
-#    command: ['./start.sh']
-#    ports:
-#      - "8092:8092"
-#    networks:
-#      - custom
+  parser_app:
+    build: .
+    container_name: parser_app
+    command: ['./start.sh']
+    ports:
+      - "8092:8092"
+    networks:
+      - custom
 
-  db:
+  db_parsers:
     image: postgres:16.1
     container_name: "parser_db"
     hostname: 'db'
