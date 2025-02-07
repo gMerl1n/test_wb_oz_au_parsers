@@ -4,7 +4,6 @@ from datetime import datetime
 
 
 class Product(Base):
-
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, unique=True)
@@ -16,4 +15,3 @@ class Product(Base):
     in_stock = Column(Integer, nullable=True)
     update_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.now())
-

@@ -15,7 +15,6 @@ from config.settings import log
 
 
 class OZCookiesLoader:
-
     sign: str = "OZ"
 
     button: str = "reload-button"
@@ -95,8 +94,8 @@ class OZCookiesLoader:
                 new_cookie_id = self.cookies_use_cases.create_new_cookies(cookies_object=new_cookie_obj)
                 number_cookies_in_file += 1
                 log.info(f"В файл добавлены новые куки с id {new_cookie_id}. "
-                             f"Теперь куков в файле: {number_cookies_in_file} "
-                             f"Время: {round(time.time() - start, 2)} сек.")
+                         f"Теперь куков в файле: {number_cookies_in_file} "
+                         f"Время: {round(time.time() - start, 2)} сек.")
 
         end = time.time() - start_all
         log.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
@@ -128,7 +127,6 @@ class OZCookiesLoader:
 
                     self.cookies_use_cases.update_cookie_object_by_id(data_to_update=data_to_update)
 
-
     def load_cookies(self) -> bool | None:
 
         number_cookies: int = self.cookies_use_cases.count_cookies_by_provider_sign(self.sign)
@@ -145,15 +143,3 @@ class OZCookiesLoader:
 
 
 oz_loader_cookies = OZCookiesLoader()
-
-
-
-
-
-
-
-
-
-
-
-

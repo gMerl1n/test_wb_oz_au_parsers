@@ -7,11 +7,9 @@ from pathlib import Path
 from abc import abstractmethod, ABC
 from src.entitity.cookies import CookieObject, CookiesObjectToUpdateExpire, CookiesObjectToUpdateWorking
 
-
 # Remove all handlers associated with the root logger object.
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
-
 
 logging.basicConfig(
     format='%(asctime)s - %(message)s',
@@ -53,7 +51,6 @@ class BaseRepositoryCookies(ABC):
 
 
 class RepositoryCookies(BaseRepositoryCookies):
-
     root_dir = Path(__file__).resolve().parent.parent
     temp_dir_path: str = os.path.join(root_dir, "temp")
     cookies_dir_path: str = os.path.join(temp_dir_path, "cookies_storage")
@@ -61,7 +58,6 @@ class RepositoryCookies(BaseRepositoryCookies):
     def create_cookies(self, new_cookies: CookieObject) -> int:
 
         path: str = os.path.join(self.cookies_dir_path, f"{new_cookies.provider_sign}_cookies.json")
-
 
         self.check_or_create_cookies_file(path)
 
@@ -122,7 +118,7 @@ class RepositoryCookies(BaseRepositoryCookies):
 
         cookies_by_provider_sign: List[dict] = []
 
-        with open(path,  "r") as file:
+        with open(path, "r") as file:
             cookies_objects = json.load(file)
 
             for cookie_obj in cookies_objects:
@@ -235,14 +231,14 @@ class RepositoryCookies(BaseRepositoryCookies):
 
             for cookie_obj in cookies_objects:
 
-                    if cookie_obj["id"] == data["id"]:
-                        if data.get("is_expired") is not None:
-                            cookie_obj["is_expired"] = data.get("is_expired")
-                            is_updated = True
+                if cookie_obj["id"] == data["id"]:
+                    if data.get("is_expired") is not None:
+                        cookie_obj["is_expired"] = data.get("is_expired")
+                        is_updated = True
 
-                        if data.get("is_working") is not None:
-                            cookie_obj["is_working"] = data.get("is_working")
-                            is_updated = True
+                    if data.get("is_working") is not None:
+                        cookie_obj["is_working"] = data.get("is_working")
+                        is_updated = True
 
             file.truncate(0)
             file.seek(0)

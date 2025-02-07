@@ -25,7 +25,6 @@ class BaseOZParser(ABC):
 
 
 class OZParser:
-
     sign: str = "OZ"
 
     use_cases = CookiesUseCases()
@@ -212,13 +211,13 @@ class OZParser:
         url: str = self.get_product_url(data)
 
         new_product: Product = Product(
-                name=name,
-                full_price=int(full_price.split()[0]),
-                price_with_discount=int(price_with_discount.split()[0]),
-                in_stock=in_stock,
-                url=url,
-                sign=self.sign
-            )
+            name=name,
+            full_price=int(full_price.split()[0]),
+            price_with_discount=int(price_with_discount.split()[0]),
+            in_stock=in_stock,
+            url=url,
+            sign=self.sign
+        )
 
         self.list_products.append(new_product.to_dict())
 
@@ -227,7 +226,6 @@ class OZParser:
 
     async def get_product_data(self, sess, url):
         async with sess.get(url=url) as response:
-
             if response.status != 200:
                 return
 
@@ -251,7 +249,6 @@ class OZParser:
             chunked_tasks = [tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests)]
 
             for chunk in chunked_tasks:
-
                 await asyncio.gather(*chunk)
 
             log.info(f"{self.sign} Number of parsed products: {len(self.list_products)}")
@@ -259,7 +256,3 @@ class OZParser:
             await self.insert_products_in_db()
 
             log.info(f"{self.sign} Products added into DB")
-
-
-
-

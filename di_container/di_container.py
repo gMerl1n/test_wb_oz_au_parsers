@@ -1,3 +1,4 @@
+import punq
 from src.repository.product_repository.product_repository import RepositoryProduct, BaseRepositoryProduct
 from src.repository.cookies_repository.cookies_repository import RepositoryCookies, BaseRepositoryCookies
 from src.use_cases.cookies_use_cases import CookiesUseCases, BaseUseCasesCookies
@@ -5,11 +6,9 @@ from src.use_cases.product_use_cases import UseCasesProduct, BaseUseCasesProduct
 from src.services.parsers_service.wb_service import BaseWBParser, WBParser
 from src.services.parsers_service.oz_service import BaseOZParser, OZParser
 from src.services.parsers_service.au_service import BaseAUParser, AUParser
-import punq
 
 
 class DIContainer:
-
     container = punq.Container()
     container.register(BaseRepositoryProduct, RepositoryProduct)
     container.register(BaseRepositoryCookies, RepositoryCookies)

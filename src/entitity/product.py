@@ -3,7 +3,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Product:
-
     name: str
     full_price: int
     price_with_discount: int
@@ -17,6 +16,3 @@ class Product:
     @classmethod
     def to_model(cls):
         return cls.__class__
-
-
-

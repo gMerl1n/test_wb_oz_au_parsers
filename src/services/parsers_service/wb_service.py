@@ -7,12 +7,6 @@ from src.use_cases.product_use_cases import BaseUseCasesProduct
 from config.settings import config_parsers, log
 
 
-
-# Remove all handlers associated with the root logger object.
-
-
-
-
 class BaseWBParser(ABC):
 
     @abstractmethod
@@ -21,8 +15,7 @@ class BaseWBParser(ABC):
 
 
 class WBParser(BaseWBParser):
-
-    sign: str= "WB"
+    sign: str = "WB"
 
     list_products: list[dict] = []
     list_json_pages: list[dict] = []
@@ -85,7 +78,6 @@ class WBParser(BaseWBParser):
         list_urls: list[str] = []
 
         for _ in range(1, 4):
-
             api_url = self.build_wb_api_url()
             list_urls.append(api_url)
             self.page += 1
@@ -137,7 +129,6 @@ class WBParser(BaseWBParser):
 
     async def get_product_data(self, sess: aiohttp.ClientSession, url: str):
         async with sess.get(url=url) as response:
-
             if response.status != 200:
                 return
 
@@ -147,7 +138,7 @@ class WBParser(BaseWBParser):
 
     async def parse_wb(self) -> None:
         print("WB")
-        limit_requests: int =self.config[self.sign]["limit_requests"]
+        limit_requests: int = self.config[self.sign]["limit_requests"]
 
         list_urls = await asyncio.to_thread(self.build_urls)
         log.info(f"{self.sign} Number urls with products to parse {len(list_urls)}")
@@ -158,11 +149,10 @@ class WBParser(BaseWBParser):
                 task = asyncio.create_task(self.get_product_data(sess, url))
                 tasks.append(task)
 
-            chunked_tasks = [ tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests) ]
+            chunked_tasks = [tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests)]
             log.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
 
             for chunk in chunked_tasks:
-
                 await asyncio.gather(*chunk)
 
         await asyncio.to_thread(self.parse_products)
@@ -174,7 +164,3 @@ class WBParser(BaseWBParser):
         self.clean()
 
         log.info(f"{self.sign} Products added into DB")
-
-
-
-

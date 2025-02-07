@@ -17,7 +17,6 @@ class BaseAUParser(ABC):
 
 
 class AUParser(BaseAUParser):
-
     sign: str = "AU"
 
     category: str = "molochnye_kokteyli_napitki"
@@ -49,7 +48,6 @@ class AUParser(BaseAUParser):
         shops_ids: list[int] = self.get_shops_ids()
 
         for shop_id in shops_ids[:10]:
-
             params = {
                 'merchantId': int(shop_id),
                 'perPage': 100
@@ -76,7 +74,7 @@ class AUParser(BaseAUParser):
             url=f'https://www.auchan.ru/product/{product_data.get("code")}/',
             in_stock=product_data.get("stock").get("qty"),
             sign=self.sign
-            )
+        )
 
         self.list_parsed_products.append(product.to_dict())
 
@@ -120,5 +118,3 @@ class AUParser(BaseAUParser):
             await asyncio.to_thread(self.parse_product, data)
 
         await self.insert_products_in_db()
-
-

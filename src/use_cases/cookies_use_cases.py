@@ -41,7 +41,6 @@ class BaseUseCasesCookies(ABC):
 
 
 class CookiesUseCases(BaseUseCasesCookies):
-
     __repo_cookies: BaseRepositoryCookies = RepositoryCookies()
 
     def create_new_cookies(self, cookies_object: CookieObject) -> int:

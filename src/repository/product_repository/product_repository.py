@@ -36,15 +36,13 @@ class BaseRepositoryProduct(ABC):
 
 class RepositoryProduct(BaseRepositoryProduct):
 
-    async def add_product(self, async_session,  new_product: dict):
-
+    async def add_product(self, async_session, new_product: dict):
         async with async_session() as session:
             # new_product["created_at"] = datetime.now()
             session.add(Product(**new_product))
             await session.commit()
 
     async def add_products(self, async_session, new_products: list[dict]):
-
         # np = []
 
         # for p in new_products:

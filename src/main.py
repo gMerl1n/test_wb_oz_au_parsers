@@ -7,13 +7,11 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from config.settings import log
 
-
 scheduler = AsyncIOScheduler()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     w = di_container.get_parser_wb()
     oz = di_container.get_parser_oz()
 
@@ -46,15 +44,5 @@ async def lifespan(app: FastAPI):
         log.info("Планировщик обновления остановлен")
 
 
-
 app = FastAPI(lifespan=lifespan)
 app.include_router(_routes)
-
-
-
-
-
-
-
-
-
