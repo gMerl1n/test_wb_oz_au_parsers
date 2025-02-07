@@ -1,13 +1,20 @@
-{"WB":  {
-  "limit_page":  3,
-  "limit_requests":  20
-},
-  "OZ": {
-  "limit_page":  3,
-  "limit_requests":  20
-},
-  "AU": {
-  "limit_page":  3,
-  "limit_requests":  20
-}
+{
+  "parsers_settings": {
+    "WB": {
+      "limit_page": 3,
+      "limit_requests": 20
+    },
+    "OZ": {
+      "limit_page": 3,
+      "limit_requests": 20
+    },
+    "AU": {
+      "limit_page": 3,
+      "limit_requests": 20
+    }
+  },
+  "server": {
+    "port": 8092,
+    "log_level": "info"
+  }
 }
