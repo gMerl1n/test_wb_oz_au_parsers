@@ -40,7 +40,8 @@ flowchart TB
 ```
 
 + Приложение состоит из нескольких слоев:
-    + Repository - слой моделями SqlAlchemy и методами чтения/записи в PostgreSQL. Также качестве хранилища используются файлы куки
+    + Repository - слой, где изолируется хранилище для данных. В качестве 
+  хранилища для товаров используется PostgreSQL и SqlAlchemy. В качестве хранилища для cookies используются JSON файлы.
     + UseCases - слой с бизнес логикой
     + Services - слой с сервисами. Всего сервисов 4: 
        + парсер WB (Wildberries)
@@ -57,7 +58,6 @@ flowchart TB
 
   + git clone git@github.com:gMerl1n/test_wb_oz_au_parsers.git
   +  docker-compose up
-  + source/venv/bin/activate
   
 + Парсеры запускаются через запросы:
     + /run_wb - WB парсер
