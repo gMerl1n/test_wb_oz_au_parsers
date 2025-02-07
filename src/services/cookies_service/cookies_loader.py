@@ -1,4 +1,5 @@
 import time
+import logging
 
 from datetime import datetime
 
@@ -11,7 +12,12 @@ from selenium.webdriver.common.by import By
 from src.entitity.cookies import CookieObject
 from src.use_cases.cookies_use_cases import BaseUseCasesCookies, CookiesUseCases
 from src.entitity.cookies import CookiesObjectToUpdateExpire
-from config.settings import log
+
+logging.basicConfig(
+    format='%(asctime)s - %(message)s | %(levelname)s ',
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.INFO
+)
 
 
 class OZCookiesLoader:
@@ -69,37 +75,37 @@ class OZCookiesLoader:
 
             start = time.time()
 
-            log.debug(f"{self.sign} Making request to get captcha and cookies to write in the file")
+            logging.debug(f"{self.sign} Making request to get captcha and cookies to write in the file")
             new_cookies = self.make_request_to_get_cookies()
 
             if new_cookies is None:
-                log.debug(f"Failed to get new cookies")
+                logging.debug(f"Failed to get new cookies")
 
                 counter_request_cookies += 1
-                log.info(f"Number of bad requests: {counter_request_cookies}")
+                logging.info(f"Number of bad requests: {counter_request_cookies}")
                 continue
 
             if not new_cookies:
-                log.debug(f"New cookies are empty: {new_cookies}")
+                logging.debug(f"New cookies are empty: {new_cookies}")
 
                 counter_request_cookies += 1
-                log.info(f"Number of bad requests: {counter_request_cookies}")
+                logging.info(f"Number of bad requests: {counter_request_cookies}")
                 continue
 
             try:
                 new_cookie_obj: CookieObject = CookieObject(provider_sign=self.sign, cookies=new_cookies)
             except Exception as ex:
-                log.warning(f"Error: {ex}")
+                logging.warning(f"Error: {ex}")
             else:
                 new_cookie_id = self.cookies_use_cases.create_new_cookies(cookies_object=new_cookie_obj)
                 number_cookies_in_file += 1
-                log.info(f"В файл добавлены новые куки с id {new_cookie_id}. "
-                         f"Теперь куков в файле: {number_cookies_in_file} "
-                         f"Время: {round(time.time() - start, 2)} сек.")
+                logging.info(f"В файл добавлены новые куки с id {new_cookie_id}. "
+                             f"Теперь куков в файле: {number_cookies_in_file} "
+                             f"Время: {round(time.time() - start, 2)} сек.")
 
         end = time.time() - start_all
-        log.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
-                 f"Number of bad requests: {counter_request_cookies}")
+        logging.info(f"Время для получения всех {self.number_cookies_in_file} куков: {round(end, 2)} сек. "
+                     f"Number of bad requests: {counter_request_cookies}")
 
     def is_cookies_expired(self) -> None:
 
@@ -117,9 +123,9 @@ class OZCookiesLoader:
 
                 expire_cookies: float = cookie.get("expiry")
                 if now > expire_cookies:
-                    log.info(f"{self.sign} "
-                             f"Cookies {cookie_obj['id']} have been expired. "
-                             f"Cookies expired at {datetime.fromtimestamp(expire_cookies)}")
+                    logging.info(f"{self.sign} "
+                                 f"Cookies {cookie_obj['id']} have been expired. "
+                                 f"Cookies expired at {datetime.fromtimestamp(expire_cookies)}")
 
                     data_to_update: CookiesObjectToUpdateExpire = CookiesObjectToUpdateExpire(id=cookie_obj["id"],
                                                                                               provider_sign=self.sign,

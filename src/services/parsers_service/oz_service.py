@@ -1,20 +1,27 @@
 import time
 import json
-from abc import ABC, abstractmethod
-from random import randint, shuffle
 
+import logging
 import asyncio
 import aiohttp
 
+from abc import ABC, abstractmethod
+from random import randint, shuffle
+
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
 from src.use_cases.cookies_use_cases import CookiesUseCases
 from src.use_cases.product_use_cases import BaseUseCasesProduct
 from src.entitity.product import Product
-from config.settings import config_parsers, log
+from config.settings import Settings
+
+logging.basicConfig(
+    format='%(asctime)s - %(message)s | %(levelname)s ',
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.INFO
+)
 
 
 class BaseOZParser(ABC):
@@ -53,8 +60,8 @@ class OZParser:
 
     page: int = 1
 
-    def __init__(self, product_use_cases: BaseUseCasesProduct) -> None:
-        self.config = config_parsers
+    def __init__(self, product_use_cases: BaseUseCasesProduct, settings: Settings) -> None:
+        self.settings = settings
         self.product_use_cases = product_use_cases
 
     @staticmethod
@@ -109,11 +116,11 @@ class OZParser:
         # Когда убедились, что в файле есть необходимое количество валидных кук, то
         # начинаем их использовать для парсинга ссылок
         cookies: list[dict] = self.use_cases.get_all_cookies(provider_sign=self.sign)
-        log.info(f"{self.sign} Куки в файле для парсинга: {len(cookies)}")
+        logging.info(f"{self.sign} Куки в файле для парсинга: {len(cookies)}")
         shuffle(cookies)
 
         urls = self.build_urls_pages()
-        log.info(f"{self.sign} Number pages to parse {len(urls)}")
+        logging.info(f"{self.sign} Number pages to parse {len(urls)}")
 
         for url in urls:
             page_source = self.make_request_to_get_urls_products(cookies=cookies, url=url)
@@ -127,7 +134,7 @@ class OZParser:
 
                 self.urls_products.append(api_url_product)
 
-        log.info(f"{self.sign} Number urls of products to parse {len(self.urls_products)}")
+        logging.info(f"{self.sign} Number urls of products to parse {len(self.urls_products)}")
 
     def get_original_price(self, widget_states: dict):
 
@@ -185,28 +192,28 @@ class OZParser:
 
         widget_states = data.get("widgetStates")
         if not widget_states:
-            log.warning(f"{self.sign} "
-                        f"Failed to get widget_states. Impossible to parse other product name, price, url")
+            logging.warning(f"{self.sign} "
+                            f"Failed to get widget_states. Impossible to parse other product name, price, url")
             return
 
         name = self.get_product_name(widget_states)
         if name is None:
-            log.debug(f"Failed to get name product")
+            logging.debug(f"Failed to get name product")
             return
 
         price_with_discount = self.get_discount_price(widget_states)
         if price_with_discount is None:
-            log.debug(f"Failed to get discount price")
+            logging.debug(f"Failed to get discount price")
             return
 
         full_price = self.get_original_price(widget_states)
         if full_price is None:
-            log.debug(f"Failed to get full price")
+            logging.debug(f"Failed to get full price")
             return
 
         in_stock = self.count_in_stock(widget_states)
         if in_stock is None:
-            log.debug(f"Failed to get in_stock")
+            logging.debug(f"Failed to get in_stock")
 
         url: str = self.get_product_url(data)
 
@@ -235,7 +242,7 @@ class OZParser:
 
     async def parse_oz(self):
 
-        limit_requests: int = self.config[self.sign]["limit_requests"]
+        limit_requests: int = self.settings.oz_settings.limit_requests
 
         # Получаем ссылки на товары, формируем их них ссылки для API Ozon
         await asyncio.to_thread(self.get_api_url_products)
@@ -251,8 +258,8 @@ class OZParser:
             for chunk in chunked_tasks:
                 await asyncio.gather(*chunk)
 
-            log.info(f"{self.sign} Number of parsed products: {len(self.list_products)}")
+            logging.info(f"{self.sign} Number of parsed products: {len(self.list_products)}")
 
             await self.insert_products_in_db()
 
-            log.info(f"{self.sign} Products added into DB")
+            logging.info(f"{self.sign} Products added into DB")

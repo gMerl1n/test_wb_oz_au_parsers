@@ -6,6 +6,7 @@ from src.use_cases.product_use_cases import UseCasesProduct, BaseUseCasesProduct
 from src.services.parsers_service.wb_service import BaseWBParser, WBParser
 from src.services.parsers_service.oz_service import BaseOZParser, OZParser
 from src.services.parsers_service.au_service import BaseAUParser, AUParser
+from config.settings import Settings
 
 
 class DIContainer:
@@ -14,6 +15,7 @@ class DIContainer:
     container.register(BaseRepositoryCookies, RepositoryCookies)
     container.register(BaseUseCasesCookies, CookiesUseCases)
     container.register(BaseUseCasesProduct, UseCasesProduct)
+    container.register(Settings)
 
     def get_parser_wb(self) -> BaseWBParser:
         self.container.register(BaseWBParser, WBParser)

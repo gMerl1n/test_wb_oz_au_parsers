@@ -1,10 +1,17 @@
+import logging
 import asyncio
 import aiohttp
 import requests
 from src.entitity.product import Product
 from abc import ABC, abstractmethod
 from src.use_cases.product_use_cases import BaseUseCasesProduct
-from config.settings import config_parsers, log
+from config.settings import Settings
+
+logging.basicConfig(
+    format='%(asctime)s - %(message)s | %(levelname)s ',
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.INFO
+)
 
 
 class BaseWBParser(ABC):
@@ -25,8 +32,8 @@ class WBParser(BaseWBParser):
 
     num_products_on_page: int = 99
 
-    def __init__(self, product_use_cases: BaseUseCasesProduct) -> None:
-        self.config = config_parsers
+    def __init__(self, product_use_cases: BaseUseCasesProduct, settings: Settings) -> None:
+        self.settings = settings
         self.product_use_cases = product_use_cases
 
     def clean(self):
@@ -73,7 +80,7 @@ class WBParser(BaseWBParser):
     def build_urls(self) -> list[str]:
 
         all_pages = self.get_page_numbers()
-        log.info(f"{self.sign} All pages to parse: {all_pages}")
+        logging.info(f"{self.sign} All pages to parse: {all_pages}")
 
         list_urls: list[str] = []
 
@@ -109,7 +116,7 @@ class WBParser(BaseWBParser):
             sign=self.sign,
         )
 
-        log.debug(f"{self.sign} New product_repository {product_wb.get("name")} added")
+        logging.debug(f"{self.sign} New product_repository {product_wb.get("name")} added")
         return new_product
 
     def parse_products(self) -> None:
@@ -137,11 +144,11 @@ class WBParser(BaseWBParser):
             self.list_json_pages.append(data)
 
     async def parse_wb(self) -> None:
-        print("WB")
-        limit_requests: int = self.config[self.sign]["limit_requests"]
+
+        limit_requests: int = self.settings.wb_settings.limit_requests
 
         list_urls = await asyncio.to_thread(self.build_urls)
-        log.info(f"{self.sign} Number urls with products to parse {len(list_urls)}")
+        logging.info(f"{self.sign} Number urls with products to parse {len(list_urls)}")
 
         async with aiohttp.ClientSession() as sess:
             tasks: list = []
@@ -150,17 +157,17 @@ class WBParser(BaseWBParser):
                 tasks.append(task)
 
             chunked_tasks = [tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests)]
-            log.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
+            logging.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
 
             for chunk in chunked_tasks:
                 await asyncio.gather(*chunk)
 
         await asyncio.to_thread(self.parse_products)
 
-        log.info(f"{self.sign} New products to add {len(self.list_products)}")
+        logging.info(f"{self.sign} New products to add {len(self.list_products)}")
 
         await self.insert_products_in_db()
 
         self.clean()
 
-        log.info(f"{self.sign} Products added into DB")
+        logging.info(f"{self.sign} Products added into DB")

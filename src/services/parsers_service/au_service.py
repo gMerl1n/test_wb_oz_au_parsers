@@ -1,12 +1,18 @@
-from abc import abstractmethod, ABC
-
+import logging
 import requests
 import aiohttp
 import asyncio
 
 from src.use_cases.product_use_cases import BaseUseCasesProduct
-from config.settings import config_parsers, log
+from abc import abstractmethod, ABC
+from config.settings import Settings
 from src.entitity.product import Product
+
+logging.basicConfig(
+    format='%(asctime)s - %(message)s | %(levelname)s ',
+    datefmt='%d-%b-%y %H:%M:%S',
+    level=logging.INFO
+)
 
 
 class BaseAUParser(ABC):
@@ -27,8 +33,8 @@ class AUParser(BaseAUParser):
     list_json_data: list[dict] = []
     list_parsed_products: list[dict] = []
 
-    def __init__(self, product_use_cases: BaseUseCasesProduct) -> None:
-        self.config = config_parsers
+    def __init__(self, product_use_cases: BaseUseCasesProduct, settings: Settings) -> None:
+        self.settings = settings
         self.product_use_cases = product_use_cases
 
     def get_shops_ids(self) -> list[int]:
@@ -65,7 +71,7 @@ class AUParser(BaseAUParser):
 
             return list_api_urls_merchants
 
-    def parse_product(self, product_data: dict) -> Product:
+    def parse_product(self, product_data: dict) -> None:
 
         product: Product = Product(
             name=product_data.get("title"),
@@ -98,7 +104,7 @@ class AUParser(BaseAUParser):
 
     async def parse_au(self):
 
-        limit_requests: int = self.config[self.sign]["limit_requests"]
+        limit_requests: int = self.settings.au_settings.limit_requests
 
         list_api_urls_ = self.get_list_api_products()
 
@@ -109,7 +115,7 @@ class AUParser(BaseAUParser):
                 tasks.append(task)
 
             chunked_tasks = [tasks[offset:limit_requests + offset] for offset in range(0, len(tasks), limit_requests)]
-            log.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
+            logging.info(f"{self.sign} Number of chunks: {len(chunked_tasks)}")
 
             for chunk in chunked_tasks[:2]:
                 await asyncio.gather(*chunk)
