@@ -15,10 +15,10 @@
         ◦ Цена без скидки
         ◦ Остатки
 - [x] Количество страниц в категории ограничить до 3.
-- [ ] Обработать возможные ошибки и блокировки.
+- [x] Обработать возможные ошибки и блокировки.
 - [x] Реализовать асинхронный подход как к постраничной пагинации, так и к итерации по ссылкам товаров, так же ограничить число одновременных сетевых запросов.
 - [x] Данные сохранить в таблицу PostgreSQL.
-- [ ] Docker compose.
+- [x] Docker compose.
 
 
 ## 2. Описание сервиса 
@@ -27,10 +27,13 @@
 
 ```mermaid
 flowchart TB
+    DIContainer
     CookiesLoaders-->UseCases
-    Api-Handlers-->UseCases
-    Service-AU-->UseCases
+    Api-Handlers-->Service-AU
+    Api-Handlers-->Service-OZ
+    Api-Handlers-->Service-WB
     Service-OZ-->UseCases
+    Service-AU-->UseCases
     Service-WB-->UseCases
     UseCases-->Interface
     Interface-->Repository
@@ -52,16 +55,10 @@ flowchart TB
 
 + Запустить приложение виртуального окружения:
 
-  + git clone git@github.com:iriskin77/test_wb_oz_au_parsers.git 
-  + python3 -m venv venv
+  + git clone git@github.com:gMerl1n/test_wb_oz_au_parsers.git
+  +  docker-compose up
   + source/venv/bin/activate
-  + pip3 install -r requirements.txt
-  + uvicorn src.main:app --reload
-
-+ Запустить PostgreSQL из Docker-compose:
-
-  + docker-compose up
-
+  
 + Парсеры запускаются через запросы:
     + /run_wb - WB парсер
     + /run_oz - OZ парсер
