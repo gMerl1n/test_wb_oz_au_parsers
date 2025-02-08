@@ -2,7 +2,6 @@ import os
 import json
 import logging
 
-from typing import List, Union
 from pathlib import Path
 from abc import abstractmethod, ABC
 from src.entitity.cookies import CookieObject, CookiesObjectToUpdateExpire, CookiesObjectToUpdateWorking
@@ -25,7 +24,7 @@ class BaseRepositoryCookies(ABC):
         pass
 
     @abstractmethod
-    def get_cookie_by_id(self, provider_sign: str, id_cookie: int) -> Union[dict, None]:
+    def get_cookie_by_id(self, provider_sign: str, id_cookie: int) -> dict | None:
         pass
 
     @abstractmethod
@@ -37,16 +36,16 @@ class BaseRepositoryCookies(ABC):
         pass
 
     @abstractmethod
-    def remove_cookies(self, provider_sign: str, cookies: List[dict]) -> bool:
+    def remove_cookies(self, provider_sign: str, cookies: list[dict]) -> bool:
         pass
 
     @abstractmethod
     def update_cookie_by_id(self,
-                            data_to_update: Union[CookiesObjectToUpdateExpire, CookiesObjectToUpdateWorking]) -> bool:
+                            data_to_update: CookiesObjectToUpdateExpire | CookiesObjectToUpdateWorking) -> bool:
         pass
 
     @abstractmethod
-    def update_cookies(self, provider_sign: str, updated_cookies: List[dict]):
+    def update_cookies(self, provider_sign: str, updated_cookies: list[dict]):
         pass
 
 
@@ -73,7 +72,7 @@ class RepositoryCookies(BaseRepositoryCookies):
         else:
             with open(path, "r+") as file:
 
-                cookies_objects: List[dict] = json.load(file)
+                cookies_objects: list[dict] = json.load(file)
                 if cookies_objects:
                     last_object_id: int = cookies_objects[-1]["id"]
                     new_cookies_id: int = last_object_id + 1
@@ -90,7 +89,7 @@ class RepositoryCookies(BaseRepositoryCookies):
 
                 return new_cookies.id
 
-    def get_cookie_by_id(self, provider_sign: str, id_cookie: int) -> Union[dict, None]:
+    def get_cookie_by_id(self, provider_sign: str, id_cookie: int) -> dict | None:
 
         path: str = os.path.join(self.cookies_dir_path, f"{provider_sign}_cookies.json")
 
@@ -116,7 +115,7 @@ class RepositoryCookies(BaseRepositoryCookies):
         if self.is_cookies_file_empty(path):
             return []
 
-        cookies_by_provider_sign: List[dict] = []
+        cookies_by_provider_sign: list[dict] = []
 
         with open(path, "r") as file:
             cookies_objects = json.load(file)
@@ -164,11 +163,11 @@ class RepositoryCookies(BaseRepositoryCookies):
                 logging.warning(f"{provider_sign} Cookies with id {id_cookie} does not exist. Impossible to remove")
             return is_deleted
 
-    def remove_cookies(self, provider_sign: str, cookies: List[dict]) -> bool:
+    def remove_cookies(self, provider_sign: str, cookies: list[dict]) -> bool:
 
         counter_removed_cookies: int = 0
 
-        updated_cookies: List[dict] = []
+        updated_cookies: list[dict] = []
 
         path: str = os.path.join(self.cookies_dir_path, f"{provider_sign}_cookies.json")
 
@@ -201,7 +200,7 @@ class RepositoryCookies(BaseRepositoryCookies):
             return True if counter_removed_cookies > 0 else False
 
     @staticmethod
-    def update_cookies_data(cookies_from_db: dict, data_to_update: dict):
+    def update_cookies_data(cookies_from_db: dict, data_to_update: dict) -> dict:
 
         for key in cookies_from_db:
             if data_to_update.get(key):
@@ -211,10 +210,9 @@ class RepositoryCookies(BaseRepositoryCookies):
         return cookies_from_db
 
     def update_cookie_by_id(self,
-                            data_to_update: Union[CookiesObjectToUpdateExpire, CookiesObjectToUpdateWorking]) -> bool:
+                            data_to_update: CookiesObjectToUpdateExpire | CookiesObjectToUpdateWorking) -> bool:
 
         is_updated: bool = False
-        updated_cookies = []
 
         path: str = os.path.join(self.cookies_dir_path, f"{data_to_update.provider_sign}_cookies.json")
 
@@ -227,7 +225,7 @@ class RepositoryCookies(BaseRepositoryCookies):
 
         with open(path, "r+") as file:
 
-            cookies_objects: List[dict] = json.load(file)
+            cookies_objects: list[dict] = json.load(file)
 
             for cookie_obj in cookies_objects:
 
@@ -247,17 +245,17 @@ class RepositoryCookies(BaseRepositoryCookies):
 
             return is_updated
 
-    def update_cookies(self, provider_sign: str, updated_cookies: List[dict]):
+    def update_cookies(self, provider_sign: str, updated_cookies: list[dict]):
         pass
 
     @staticmethod
-    def check_or_create_cookies_file(path: str):
+    def check_or_create_cookies_file(path: str) -> None:
         if not os.path.exists(path):
             with open(path, "w", encoding="utf-8"):
                 pass
 
     @staticmethod
-    def is_cookies_file_empty(path: str):
+    def is_cookies_file_empty(path: str) -> bool | None:
         if os.stat(path).st_size == 0:
             return True
 
@@ -266,7 +264,7 @@ root_dir = Path(__file__).resolve().parent.parent
 cookies_dir_path: str = os.path.join(root_dir, "temp", "cookies_storage")
 
 
-def check_or_create_dir(path: str):
+def check_or_create_dir(path: str) -> bool | None:
     if os.path.exists(path):
         return True
 

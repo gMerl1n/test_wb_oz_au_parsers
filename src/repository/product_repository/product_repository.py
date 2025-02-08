@@ -1,5 +1,4 @@
 from abc import abstractmethod, ABC
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,23 +9,23 @@ from src.repository.product_repository.product_model import Product
 class BaseRepositoryProduct(ABC):
 
     @abstractmethod
-    async def add_product(self, async_session, new_product: dict):
+    async def add_product(self, async_session, new_product: dict) -> None:
         raise NotImplemented
 
     @abstractmethod
-    async def add_products(self, async_session, new_products: list[dict]):
+    async def add_products(self, async_session, new_products: list[dict]) -> None:
         raise NotImplemented
 
     @abstractmethod
-    def get_product_by_id(self):
+    def get_product_by_id(self) -> Product | None:
         raise NotImplemented
 
     @abstractmethod
-    async def get_products_by_sign(self, async_session, sign: str):
+    async def get_products_by_sign(self, async_session, sign: str) -> list[Product]:
         raise NotImplemented
 
     @abstractmethod
-    async def get_all_products(self, async_session):
+    async def get_all_products(self, async_session) -> list[Product]:
         raise NotImplemented
 
     @abstractmethod
@@ -36,35 +35,29 @@ class BaseRepositoryProduct(ABC):
 
 class RepositoryProduct(BaseRepositoryProduct):
 
-    async def add_product(self, async_session, new_product: dict):
+    async def add_product(self, async_session, new_product: dict) -> None:
         async with async_session() as session:
-            # new_product["created_at"] = datetime.now()
             session.add(Product(**new_product))
             await session.commit()
 
-    async def add_products(self, async_session, new_products: list[dict]):
-        # np = []
+    async def add_products(self, async_session, new_products: list[dict]) -> None:
 
-        # for p in new_products:
-        #     p["created_at"] = datetime.now()
-        #     np.append(p)
-
-        res = [Product(**p) for p in new_products]
+        products_to_add = [Product(**p) for p in new_products]
 
         async with async_session() as session:
-            session.add_all(res)
+            session.add_all(products_to_add)
             await session.commit()
 
     def get_product_by_id(self):
         pass
 
-    async def get_products_by_sign(self, async_session, sign: str):
+    async def get_products_by_sign(self, async_session, sign: str) -> list:
         async with async_session() as session:
             query = select(Product).where(Product.sign == sign)
             products_by_sign = await session.execute(query)
             return products_by_sign.scalars().all()
 
-    async def get_all_products(self, async_session):
+    async def get_all_products(self, async_session) -> list:
         async with async_session() as session:
             query = select(Product)
             products = await session.execute(query)

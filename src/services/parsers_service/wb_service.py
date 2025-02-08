@@ -17,7 +17,7 @@ logging.basicConfig(
 class BaseWBParser(ABC):
 
     @abstractmethod
-    def parse_wb(self):
+    def parse_wb(self) -> None:
         pass
 
 
@@ -36,7 +36,7 @@ class WBParser(BaseWBParser):
         self.settings = settings
         self.product_use_cases = product_use_cases
 
-    def clean(self):
+    def clean(self) -> None:
 
         self.list_products.clear()
         self.list_json_pages.clear()
@@ -131,10 +131,10 @@ class WBParser(BaseWBParser):
                 new_product = self.create_product_object(pr)
                 self.list_products.append(new_product.to_dict())
 
-    async def insert_products_in_db(self):
+    async def insert_products_in_db(self) -> None:
         await self.product_use_cases.add_products(self.list_products)
 
-    async def get_product_data(self, sess: aiohttp.ClientSession, url: str):
+    async def get_product_data(self, sess: aiohttp.ClientSession, url: str) -> None:
         async with sess.get(url=url) as response:
             if response.status != 200:
                 return

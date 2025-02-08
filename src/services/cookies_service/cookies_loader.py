@@ -47,7 +47,7 @@ class OZCookiesLoader:
         time.sleep(randint(self.min_sleep_selenium_limit, self.max_sleep_selenium_limit) / 1000)  # in seconds
         return driver
 
-    def make_request_to_get_cookies(self):
+    def make_request_to_get_cookies(self) -> list[dict] | None:
 
         opts = Options()
         opts.add_argument("--headless")

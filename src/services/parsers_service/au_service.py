@@ -18,7 +18,7 @@ logging.basicConfig(
 class BaseAUParser(ABC):
 
     @abstractmethod
-    def parse_au(self):
+    def parse_au(self) -> None:
         pass
 
 
@@ -30,7 +30,7 @@ class AUParser(BaseAUParser):
     api_url_shops: str = 'https://www.auchan.ru/v1/shops'
     api_url_products: str = 'https://www.auchan.ru/v1/catalog/products'
 
-    list_json_data: list[dict] = []
+    list_json_data_from_au: list[dict] = []
     list_parsed_products: list[dict] = []
 
     def __init__(self, product_use_cases: BaseUseCasesProduct, settings: Settings) -> None:
@@ -47,9 +47,9 @@ class AUParser(BaseAUParser):
 
         return list_shop_ids
 
-    def get_list_api_products(self):
+    def get_list_api_products(self) -> list[dict]:
 
-        list_api_urls_merchants = []
+        list_api_urls_merchants: list[dict] = []
 
         shops_ids: list[int] = self.get_shops_ids()
 
@@ -84,10 +84,10 @@ class AUParser(BaseAUParser):
 
         self.list_parsed_products.append(product.to_dict())
 
-    async def insert_products_in_db(self):
+    async def insert_products_in_db(self) -> None:
         await self.product_use_cases.add_products(self.list_parsed_products)
 
-    async def get_product_data(self, sess, params_requests):
+    async def get_product_data(self, sess, params_requests: dict) -> None:
 
         params = params_requests["params"]
         body = params_requests["body"]
@@ -100,9 +100,9 @@ class AUParser(BaseAUParser):
 
             list_items: list[dict] = data.get("items")
             if list_items:
-                self.list_json_data.extend(list_items)
+                self.list_json_data_from_au.extend(list_items)
 
-    async def parse_au(self):
+    async def parse_au(self) -> None:
 
         limit_requests: int = self.settings.au_settings.limit_requests
 
@@ -120,7 +120,7 @@ class AUParser(BaseAUParser):
             for chunk in chunked_tasks[:2]:
                 await asyncio.gather(*chunk)
 
-        for data in self.list_json_data:
+        for data in self.list_json_data_from_au:
             await asyncio.to_thread(self.parse_product, data)
 
         await self.insert_products_in_db()

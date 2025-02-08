@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Integer, DateTime
 from config.base import Base
 from datetime import datetime
+from sqlalchemy import Column, String, Integer, DateTime
 
 
 class Product(Base):
