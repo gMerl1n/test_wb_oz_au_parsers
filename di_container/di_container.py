@@ -15,18 +15,21 @@ class DIContainer:
     container.register(BaseRepositoryCookies, RepositoryCookies)
     container.register(BaseUseCasesCookies, CookiesUseCases)
     container.register(BaseUseCasesProduct, UseCasesProduct)
+
+    container.register(BaseWBParser, WBParser)
+    container.register(BaseOZParser, OZParser)
+    container.register(BaseUseCasesCookies, OZParser)
+    container.register(BaseAUParser, AUParser)
+
     container.register(Settings)
 
     def get_parser_wb(self) -> BaseWBParser:
-        self.container.register(BaseWBParser, WBParser)
         return self.container.resolve(BaseWBParser)
 
     def get_parser_oz(self) -> BaseOZParser:
-        self.container.register(BaseOZParser, OZParser)
         return self.container.resolve(BaseOZParser)
 
     def get_parser_au(self) -> BaseAUParser:
-        self.container.register(BaseAUParser, AUParser)
         return self.container.resolve(BaseAUParser)
 
     def get_use_cases_product(self) -> BaseUseCasesProduct:

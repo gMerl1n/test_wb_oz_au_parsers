@@ -12,8 +12,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from bs4 import BeautifulSoup
 
-from src.use_cases.cookies_use_cases import CookiesUseCases
 from src.use_cases.product_use_cases import BaseUseCasesProduct
+from src.use_cases.cookies_use_cases import BaseUseCasesCookies
 from src.entitity.product import Product
 from config.settings import Settings
 
@@ -27,19 +27,16 @@ logging.basicConfig(
 class BaseOZParser(ABC):
 
     @abstractmethod
-    def parse_oz(self):
+    def parse_oz(self) -> None:
         pass
 
 
 class OZParser:
     sign: str = "OZ"
 
-    use_cases = CookiesUseCases()
-
     parser: str = "html.parser"
 
     list_products = []
-    list_json_data = []
 
     url_product: str = "j9t_23 tile-hover-target ju_23"
     api_url: str = "https://www.ozon.ru/api/composer-api.bx/page/json/v2?url="
@@ -60,23 +57,28 @@ class OZParser:
 
     page: int = 1
 
-    def __init__(self, product_use_cases: BaseUseCasesProduct, settings: Settings) -> None:
+    def __init__(self,
+                 product_use_cases: BaseUseCasesProduct,
+                 cookies_use_cases: BaseUseCasesCookies,
+                 settings: Settings) -> None:
+
         self.settings = settings
+        self.cookies_use_cases = cookies_use_cases
         self.product_use_cases = product_use_cases
 
     @staticmethod
     def to_json(data: str):
         return json.loads(data)
 
-    def to_bs4(self, page_source: str):
+    def to_bs4(self, page_source: str) -> BeautifulSoup:
         return BeautifulSoup(page_source, self.parser)
 
-    def build_url(self):
+    def build_url(self) -> str:
 
         url = f"https://www.ozon.ru/category/kofe/?page={self.page}"
         return url
 
-    def build_urls_pages(self):
+    def build_urls_pages(self) -> list[str]:
 
         pages = []
 
@@ -86,7 +88,7 @@ class OZParser:
 
         return pages
 
-    def make_request_to_get_urls_products(self, cookies: list[dict], url):
+    def make_request_to_get_urls_products(self, cookies: list[dict], url: str) -> str:
 
         opts = Options()
         opts.add_argument("--headless")
@@ -115,7 +117,7 @@ class OZParser:
 
         # Когда убедились, что в файле есть необходимое количество валидных кук, то
         # начинаем их использовать для парсинга ссылок
-        cookies: list[dict] = self.use_cases.get_all_cookies(provider_sign=self.sign)
+        cookies: list[dict] = self.cookies_use_cases.get_all_cookies(provider_sign=self.sign)
         logging.info(f"{self.sign} Куки в файле для парсинга: {len(cookies)}")
         shuffle(cookies)
 
@@ -136,7 +138,7 @@ class OZParser:
 
         logging.info(f"{self.sign} Number urls of products to parse {len(self.urls_products)}")
 
-    def get_original_price(self, widget_states: dict):
+    def get_original_price(self, widget_states: dict) -> int | None:
 
         web_price = widget_states.get("webPrice-3121879-default-1")
         if not web_price:
@@ -146,7 +148,7 @@ class OZParser:
             full_price = json_title.get("originalPrice")
             return full_price if full_price else None
 
-    def get_discount_price(self, widget_states: dict):
+    def get_discount_price(self, widget_states: dict) -> str | None:
 
         web_price = widget_states.get("webPrice-3121879-default-1")
         if not web_price:
@@ -156,7 +158,7 @@ class OZParser:
             price_with_discount = json_title.get("price")
             return price_with_discount if price_with_discount else None
 
-    def get_product_name(self, widget_states: dict):
+    def get_product_name(self, widget_states: dict) -> str | None:
 
         web_product_heading = widget_states.get("webProductHeading-3385933-default-1")
         if not web_product_heading:
@@ -166,7 +168,7 @@ class OZParser:
             name = json_title.get("title")
             return name if name else None
 
-    def count_in_stock(self, widget_states: dict):
+    def count_in_stock(self, widget_states: dict) -> int | None:
 
         big_promo = widget_states.get("bigPromoPDP-3422454-default-1")
         if not big_promo:
@@ -182,13 +184,13 @@ class OZParser:
                 return int(''.join(in_stock_num))
 
     @staticmethod
-    def get_product_url(data):
+    def get_product_url(data: dict) -> str:
         seo: dict = data.get("seo")
         link: list = seo.get("link")
         href = link[0].get("href")
         return href if href else ""
 
-    def parse_product(self, data):
+    def parse_product(self, data) -> None:
 
         widget_states = data.get("widgetStates")
         if not widget_states:
@@ -231,7 +233,7 @@ class OZParser:
     async def insert_products_in_db(self):
         await self.product_use_cases.add_products(self.list_products)
 
-    async def get_product_data(self, sess, url):
+    async def get_product_data(self, sess: aiohttp.ClientSession, url: str) -> None:
         async with sess.get(url=url) as response:
             if response.status != 200:
                 return
@@ -240,7 +242,7 @@ class OZParser:
 
             self.parse_product(data)
 
-    async def parse_oz(self):
+    async def parse_oz(self) -> None:
 
         limit_requests: int = self.settings.oz_settings.limit_requests
 
